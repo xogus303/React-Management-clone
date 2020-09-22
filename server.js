@@ -21,6 +21,9 @@ const connection = mysql.createConnection({
 
 connection.connect();
 
+const multer = require('multer'); // 파일처리 라이브러리
+const upload = multer({ dest: './upload' }); // 루트의 업로드 폴더
+
 app.get('/api/customers', (req, res) => {
     connection.query(
       "SELECT * FROM CUSTOMER",
@@ -29,5 +32,25 @@ app.get('/api/customers', (req, res) => {
       }
     )
 })
+
+app.use('/image', express.static('./upload')); // 'image'란 이름의 경로로 업로드 폴더와 맵핑,
+
+app.post('/api/customers', upload.single('image'), (req, res) =>  {
+  let sql = 'INSERT INTO CUSTOMER VALUES (null, ?, ?, ?, ?, ?)';
+  let image = '/image/' + req.file.filename;
+  let name = req.body.name
+  let birthday = req.body.birthday
+  let gender = req.body.gender
+  let job = req.body.job
+  let params = [image, name, birthday, gender, job];
+  connection.query(sql, params,
+    (err, rows, fields) => {
+      res.send(rows)
+      console.log('err', err);
+      console.log('rows', rows);
+    })
+})
+
+
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
