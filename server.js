@@ -26,7 +26,7 @@ const upload = multer({ dest: './upload' }); // 루트의 업로드 폴더
 
 app.get('/api/customers', (req, res) => {
     connection.query(
-      "SELECT * FROM CUSTOMER",
+      "SELECT * FROM CUSTOMER WHERE isDeleted = 0",
       (err, rows, fields) => {
         res.send(rows);
       }
@@ -36,7 +36,7 @@ app.get('/api/customers', (req, res) => {
 app.use('/image', express.static('./upload')); // 'image'란 이름의 경로로 업로드 폴더와 맵핑,
 
 app.post('/api/customers', upload.single('image'), (req, res) =>  {
-  let sql = 'INSERT INTO CUSTOMER VALUES (null, ?, ?, ?, ?, ?)';
+  let sql = 'INSERT INTO CUSTOMER VALUES (null, ?, ?, ?, ?, ?, now(), 0)';
   let image = '/image/' + req.file.filename;
   let name = req.body.name
   let birthday = req.body.birthday
@@ -49,6 +49,16 @@ app.post('/api/customers', upload.single('image'), (req, res) =>  {
       console.log('err', err);
       console.log('rows', rows);
     })
+})
+
+app.delete('/api/customers/:id', (req, res) => {
+  let sql = 'UPDATE CUSTOMER SET isDeleted = 1 WHERE id = ?';
+  let params = [req.params.id];
+  connection.query(sql, params,
+    (err, rows, fields) => {
+      res.send(rows)
+    }
+  )
 })
 
 
